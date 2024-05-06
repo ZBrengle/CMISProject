@@ -5,82 +5,161 @@ import Loop.KeyInput;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.util.Objects;
 
 public class MainCharacter extends Being {
-    GameWindow gp;
+    GameWindow gw;
     KeyInput keyI;
 
-    public MainCharacter(GameWindow gp, KeyInput keyI) {
-        this.gp = gp;
+    public final int screenX;
+    public final int screenY;
+    int keyCount = 0;
+
+    public MainCharacter(GameWindow gw, KeyInput keyI) {
+        this.gw = gw;
         this.keyI = keyI;
+
+        screenX = gw.screenWidth/2 - (gw.tileSize/2);
+        screenY = gw.screenHeight/2 - (gw.tileSize/2);
+
+
+        sArea = new Rectangle();
+        sArea.x = 8;
+        sArea.y = 16;
+        sAreaDefaultX = sArea.x;
+        sAreaDefaultY = sArea.y;
+        sArea.height = 32;
+        sArea.width = 32;
+
         setDefaultValues();
+        getPlayerSprite();
+
+
     }
 
         public void setDefaultValues () {
-            x = 100;
-            y = 100;
-            speed = 4;
+            worldX = gw.tileSize * 23;
+            worldY = gw.tileSize * 23;
+            speed = 2;
             direction = "down";
         }
-        //IOhandling for sprites(Sprites not implemented yet)
-        public void getPlayerSprite(){
-        try{
-            up1 = ImageIO.read(getClass().getResourceAsStream("/character/maincharacter_up_1.png"));
-            up2 = ImageIO.read(getClass().getResourceAsStream("/character/maincharacter_up_2.png"));
-            down1 = ImageIO.read(getClass().getResourceAsStream("/character/maincharacter_down_1.png"));
-            down2 = ImageIO.read(getClass().getResourceAsStream("/character/maincharacter_down_2.png"));
-            right1 = ImageIO.read(getClass().getResourceAsStream("/character/maincharacter_right_1.png"));
-            right2 = ImageIO.read(getClass().getResourceAsStream("/character/maincharacter_right_2.png"));
-            left1 = ImageIO.read(getClass().getResourceAsStream("/character/maincharacter_left_1.png"));
-            left2 = ImageIO.read(getClass().getResourceAsStream("/character/maincharacter_left_2.png"));
-        }catch(IOException e){
-            e.printStackTrace();
-        }
+
+            //IOhandling for sprite
+            public void getPlayerSprite() {
+                try {
+                    up1 = ImageIO.read(getClass().getResourceAsStream("/maincharacter/maincharacter_up_1.png"));
+                    up2 = ImageIO.read(getClass().getResourceAsStream("/maincharacter/maincharacter_up_2.png"));
+                    down1 = ImageIO.read(getClass().getResourceAsStream("/maincharacter/maincharacter_down_1.png"));
+                    down2 = ImageIO.read(getClass().getResourceAsStream("/maincharacter/maincharacter_down_2.png"));
+                    right1 = ImageIO.read(getClass().getResourceAsStream("/maincharacter/maincharacter_right_1.png"));
+                    right2 = ImageIO.read(getClass().getResourceAsStream("/maincharacter/maincharacter_right_2.png"));
+                    left1 = ImageIO.read(getClass().getResourceAsStream("/maincharacter/maincharacter_left_1.png"));
+                    left2 = ImageIO.read(getClass().getResourceAsStream("/maincharacter/maincharacter_left_2.png"));
+
+                } catch(IOException e) {
+                    e.printStackTrace();
+                }
             }
 
-
-
         public void update () {
+            if(keyI.upPressed || keyI.downPressed || keyI.leftPressed || keyI.rightPressed){
             if (keyI.upPressed) {
-                y -= speed;
+                worldY -= speed;
                 direction = "up";
             }
             if (keyI.downPressed) {
-                y += speed;
+                worldY += speed;
                 direction = "down";
             }
             if (keyI.rightPressed) {
-                x += speed;
+                worldX += speed;
                 direction = "right";
             }
             if (keyI.leftPressed) {
-                x -= speed;
+                worldX -= speed;
                 direction = "left";
+            }
+
+                collisionOn = false;
+                gw.detector.tileCheck(this);
+
+
+                int objIndex = gw.detector.checkObject(this,true);
+
+                if (collisionOn == false){
+                    switch (direction) {
+                        case "up" -> worldY -= speed;
+                        case "down" -> worldY += speed;
+                        case "left" -> worldX -= speed;
+                        case "right" -> worldX += speed;
+                    }
+                }
+
+            sCounter++;
+            if(sCounter > 12){
+                if(sNum==1){
+                    sNum = 2;
+                }
+                else if (sNum ==2){
+                    sNum = 1;
+                }
+                sCounter = 0;
+            }}
+            //check for collision
+
+        }
+        public void getObj(int i){
+            if(i != 999){
+                String objectName = gw.obj[i].name;
+                switch(objectName){
+                    case "Key":
+                        keyCount++;
+                        gw.obj[i] = null;
+                        break;
+                    case "Door":
+                        if(keyCount > 0){
+                            gw.obj[i] = null;
+                            keyCount--;
+                        }
+                        System.out.println(keyCount + " are left.");
+                        break;
+                }
             }
         }
         public void draw (Graphics2D g2){
-        g2.setColor(Color.white);
 
-        g2.fillRect(x, y, gp.tileSize, gp.tileSize);
 
-//            BufferedImage image = null;
+            BufferedImage image = null;
 
-//            switch (direction) {
-//                case "up":
-//                    image = up1;
-//                    break;
-//                case "down":
-//                    image = down1;
-//                    break;
-//                case "right":
-//                    image = right1;
-//                    break;
-//                case "left":
-//                    image = left1;
-//                    break;
-//            }
-//            g2.drawImage(image,x,y,gp.tileSize,gp.tileSize,null);
+            switch (direction) {
+                case "up":
+                    if(sNum == 1) {
+                        image = up1; }
+                    if(sNum == 2) {
+                        image = up2;}
+                    break;
+                case "down":
+                    if(sNum == 1) {
+                        image = down1; }
+                    if(sNum == 2) {
+                        image = down2;}
+                    break;
+                case "right":
+                    if(sNum == 1) {
+                        image = right1; }
+                    if(sNum == 2) {
+                        image = right2;}
+                    break;
+                case "left":
+                    if(sNum == 1) {
+                        image = left1; }
+                    if(sNum == 2) {
+                        image = left2;}
+                    break;
+            }
+            g2.drawImage(image,screenX,screenY,gw.tileSize,gw.tileSize,null);
         }
 
     }

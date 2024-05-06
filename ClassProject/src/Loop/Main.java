@@ -17,6 +17,7 @@ public class Main {
         window.setLocation(50,50);
         window.setVisible(true);
 
+        gameWindow.setGame();
         gameWindow.startGameThread();
     }
 
